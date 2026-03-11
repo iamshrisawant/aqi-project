@@ -1,7 +1,7 @@
 /*
  * ESP32_Predict.ino 
  * IoT Air Quality Monitoring System - Live Prediction Mode
- * Hardware: ESP32, MQ-135, MQ-7, DHT22
+ * Hardware: ESP32, MQ-135, MQ-7, DHT11
  * 
  * Purpose: Designed for the live demonstration. 
  * Reads Fields 1-4. Actively pings the Predictor API (Python) for the AI label
@@ -18,7 +18,7 @@
 #define MQ135_PIN 34
 #define MQ7_PIN   35
 #define DHTPIN    4
-#define DHTTYPE   DHT22 
+#define DHTTYPE   DHT11 
 #define GP2Y10_LED_PIN 5
 #define GP2Y10_AOUT_PIN 32
 

@@ -22,7 +22,7 @@ This system is designed to provide real-time air quality monitoring with predict
     *   GP2Y10 (Optical Dust Sensor for true PM2.5)
     *   MQ-135 (Air Quality / VOCs)
     *   MQ-7 (Carbon Monoxide)
-    *   DHT22 (Temperature & Humidity)
+    *   DHT11 (Temperature & Humidity)
 
 ---
 
@@ -38,7 +38,7 @@ Connect your sensors to the ESP32 as follows. Make sure to provide adequate 5V/3
     *   `AOUT PIN`: GPIO 34
 *   **MQ-7 (Carbon Monoxide)**:
     *   `AOUT PIN`: GPIO 35
-*   **DHT22 (Temp & Humidity)**:
+*   **DHT11 (Temp & Humidity)**:
     *   `DATA PIN`: GPIO 4
 
 ### 2.2 ThingSpeak Configuration

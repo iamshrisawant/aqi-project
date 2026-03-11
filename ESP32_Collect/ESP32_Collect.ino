@@ -1,7 +1,7 @@
 /*
  * ESP32_Collect.ino 
  * IoT Air Quality Monitoring System - Data Collection Mode
- * Hardware: ESP32, MQ-135, MQ-7, DHT22
+ * Hardware: ESP32, MQ-135, MQ-7, DHT11
  * 
  * Purpose: Strictly collects raw data (Fields 1-4) and pushes directly to ThingSpeak.
  * This script is used ONLY to build the training dataset. It does not ping the 
@@ -16,7 +16,7 @@
 #define MQ135_PIN 34
 #define MQ7_PIN   35
 #define DHTPIN    4
-#define DHTTYPE   DHT22 
+#define DHTTYPE   DHT11 
 #define GP2Y10_LED_PIN 5
 #define GP2Y10_AOUT_PIN 32
 
