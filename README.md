@@ -19,7 +19,8 @@ This system is designed to provide real-time air quality monitoring with predict
 ### Hardware Stack
 *   **Microcontroller**: ESP32
 *   **Sensors**:
-    *   MQ-135 (Air Quality / Simulating PM2.5)
+    *   GP2Y10 (Optical Dust Sensor for true PM2.5)
+    *   MQ-135 (Air Quality / VOCs)
     *   MQ-7 (Carbon Monoxide)
     *   DHT22 (Temperature & Humidity)
 
@@ -27,18 +28,32 @@ This system is designed to provide real-time air quality monitoring with predict
 
 ## 2. Infrastructure Setup & Prerequisites
 
-### 2.1 ThingSpeak Configuration
-Your free ThingSpeak channel must be configured with exactly 5 fields to match the payload bundles.
+### 2.1 Hardware Wiring Guide
+Connect your sensors to the ESP32 as follows. Make sure to provide adequate 5V/3.3V power to the sensors according to their respective datasheets.
+
+*   **GP2Y10 (Optical Dust Sensor)**:
+    *   `LED PIN`: GPIO 5
+    *   `AOUT PIN`: GPIO 32
+*   **MQ-135 (Air Quality / VOC)**:
+    *   `AOUT PIN`: GPIO 34
+*   **MQ-7 (Carbon Monoxide)**:
+    *   `AOUT PIN`: GPIO 35
+*   **DHT22 (Temp & Humidity)**:
+    *   `DATA PIN`: GPIO 4
+
+### 2.2 ThingSpeak Configuration
+Your free ThingSpeak channel must be configured with exactly 6 fields to match the payload bundles.
 1.  Log into ThingSpeak and create a new Channel (or edit your existing one).
 2.  Enable and name the following fields exactly:
-    *   **Field 1**: PM2.5 (ug/m3)
-    *   **Field 2**: CO (ppm)
-    *   **Field 3**: Temperature (C)
-    *   **Field 4**: Humidity (%)
-    *   **Field 5**: ML_Predicted_AQI_Category
+    *   **Field 1**: PM2.5 (ug/m3) (from GP2Y10)
+    *   **Field 2**: MQ-135 Raw AQ (V)
+    *   **Field 3**: CO (ppm) (from MQ-7)
+    *   **Field 4**: Temperature (C)
+    *   **Field 5**: Humidity (%)
+    *   **Field 6**: ML_Predicted_AQI_Category
 3.  Navigate to the "API Keys" tab and copy your **Write API Key**. You will need this for the ESP32 code.
 
-### 2.2 Python Environment Setup
+### 2.3 Python Environment Setup
 The centralized predictor runs on a local machine (Windows laptop, Linux server, Raspberry Pi).
 1.  Ensure you have **Python 3.8+** installed.
 2.  Open a terminal in the project directory.
@@ -47,7 +62,7 @@ The centralized predictor runs on a local machine (Windows laptop, Linux server,
     pip install -r requirements.txt
     ```
 
-### 2.3 ESP32 & Arduino IDE Setup
+### 2.4 ESP32 & Arduino IDE Setup
 To compile and upload code to the ESP32, you must configure the Arduino IDE.
 1.  **Install Arduino IDE**: Download and install the latest version of the Arduino IDE.
 2.  **Add ESP32 Board Manager**:
@@ -87,7 +102,7 @@ All pipeline interactions are wrapped in a simplified Interactive Python Orchest
 1.  Open **`ESP32_Collect.ino`** in your Arduino IDE.
 2.  Flash the code to your ESP32 board.
 3.  Power on the board and let it run (e.g., near smoke, outdoors, indoors) to gather diverse sensor data.
-4.  It will blindly push hundreds of raw sensor readings to ThingSpeak Fields 1-4. The more robust this phase, the smarter the subsequent AI model will be.
+4.  It will blindly push hundreds of raw sensor readings to ThingSpeak Fields 1-5. The more robust this phase, the smarter the subsequent AI model will be.
 
 ### Phase 2: Machine Learning Training
 1.  Open a terminal in the project directory.
@@ -109,6 +124,6 @@ All pipeline interactions are wrapped in a simplified Interactive Python Orchest
 4.  Watch the Live Inferences:
     *   Every 20 seconds, the ESP32 instantly pings your local Python server with the raw environmental data.
     *   The Python server immediately replies with the AI Classification Label.
-    *   The ESP32 bundles the sensory data + the intelligent prediction and pushes the complete status payload to ThingSpeak Fields 1-5 without delays or rate-limit violations.
+    *   The ESP32 bundles the sensory data + the intelligent prediction and pushes the complete status payload to ThingSpeak Fields 1-6 without delays or rate-limit violations.
 
 You can halt the Predictor Server at any time by pressing `Ctrl+C` in the terminal, safely returning you to the main menu.

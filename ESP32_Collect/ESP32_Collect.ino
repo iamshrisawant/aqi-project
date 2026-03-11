@@ -17,6 +17,8 @@
 #define MQ7_PIN   35
 #define DHTPIN    4
 #define DHTTYPE   DHT22 
+#define GP2Y10_LED_PIN 5
+#define GP2Y10_AOUT_PIN 32
 
 // ===== Credentials & Config =====
 const char* ssid = "Shri's a52";
@@ -44,6 +46,9 @@ void setup() {
     dht.begin();
     pinMode(MQ135_PIN, INPUT);
     pinMode(MQ7_PIN, INPUT);
+    pinMode(GP2Y10_AOUT_PIN, INPUT);
+    pinMode(GP2Y10_LED_PIN, OUTPUT);
+    digitalWrite(GP2Y10_LED_PIN, HIGH); // Default OFF
     
     Serial.println("\n⏳ Warming up sensors (30s)...");
     delay(30000); 
@@ -63,29 +68,43 @@ void loop() {
         float temperature = dht.readTemperature();
         float humidity = dht.readHumidity();
         
+        // GP2Y10 Read Cycle
+        digitalWrite(GP2Y10_LED_PIN, LOW); // LED ON
+        delayMicroseconds(280);
+        int gp2y10_raw = analogRead(GP2Y10_AOUT_PIN);
+        delayMicroseconds(40);
+        digitalWrite(GP2Y10_LED_PIN, HIGH); // LED OFF
+        delayMicroseconds(9680);
+        
         if (isnan(temperature) || isnan(humidity)) {
             Serial.println("✗ DHT Read Failed");
             return;
         }
         
-        float mq135_voltage = mq135_raw * (3.3 / 4095.0);
+        float mq135_voltage = mq135_raw * (3.3 / 4095.0); // MQ-135 Raw AQ voltage
         float mq7_voltage = mq7_raw * (3.3 / 4095.0);
         float co_ppm = mq7_voltage * 100;
-        float pm25 = (mq135_voltage * 100) / 2; 
+        
+        // GP2Y10 PM2.5 calculation
+        float gp2y10_voltage = gp2y10_raw * (3.3 / 4095.0);
+        float pm25 = 0.17 * gp2y10_voltage - 0.1; // mg/m3
+        if (pm25 < 0) pm25 = 0.0;
+        pm25 *= 1000; // ug/m3
 
-        Serial.printf("\n[COLLECTING] Temp: %.1fC | Hum: %.1f%% | CO: %.1fppm | PM2.5: %.1f\n", 
-                      temperature, humidity, co_ppm, pm25);
+        Serial.printf("\n[COLLECTING] Temp: %.1fC | Hum: %.1f%% | CO: %.1fppm | MQ135(V): %.2fV | GP2Y10 PM2.5: %.1f\n", 
+                      temperature, humidity, co_ppm, mq135_voltage, pm25);
                       
-        // 2. PUSH STRICTLY FIELDS 1-4 TO THINGSPEAK (No Field 5 Prediction)
+        // 2. PUSH STRICTLY FIELDS 1-5 TO THINGSPEAK (No Field 6 Prediction)
         if (WiFi.status() == WL_CONNECTED) {
             HTTPClient http;
             String url = String(server) + "?api_key=" + writeAPIKey +
-                         "&field1=" + String(pm25, 2) + "&field2=" + String(co_ppm, 2) +
-                         "&field3=" + String(temperature, 1) + "&field4=" + String(humidity, 1);
+                         "&field1=" + String(pm25, 2) + "&field2=" + String(mq135_voltage, 2) +
+                         "&field3=" + String(co_ppm, 2) + "&field4=" + String(temperature, 1) +
+                         "&field5=" + String(humidity, 1);
             
             http.begin(url);
             int httpCode = http.GET();
-            if (httpCode > 0) Serial.println("✓ Uploaded Raw Sensors to ThingSpeak (Field 5 left null)");
+            if (httpCode > 0) Serial.println("✓ Uploaded Raw Sensors to ThingSpeak (Field 6 left null)");
             else Serial.println("✗ ThingSpeak Upload Failed");
             http.end();
         }

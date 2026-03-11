@@ -41,11 +41,12 @@ def get_categorical_aqi(pm25):
 def predict():
     """
     ESP32 Pings this endpoint via GET request.
-    Example: http://<IP>:5000/predict?pm25=45.2&co=12.5&temp=28.3&humidity=65.8
+    Example: http://<IP>:5000/predict?pm25=45.2&mq135_aq=1.05&co=12.5&temp=28.3&humidity=65.8
     """
     # 1. Parse Query Parameters from ESP32
     try:
         pm25 = float(request.args.get('pm25', 0.0))
+        mq135_aq = float(request.args.get('mq135_aq', 0.0))
         co = float(request.args.get('co', 0.0))
         temp = float(request.args.get('temp', 0.0))
         humidity = float(request.args.get('humidity', 0.0))
@@ -59,14 +60,14 @@ def predict():
 
     try:
         # 3. Predict Raw AQI Value
-        input_data = pd.DataFrame({'PM25': [pm25], 'CO': [co], 'Temp': [temp], 'Humidity': [humidity]})
+        input_data = pd.DataFrame({'PM25': [pm25], 'MQ135_AQ': [mq135_aq], 'CO': [co], 'Temp': [temp], 'Humidity': [humidity]})
         predicted_aqi_val = model.predict(input_data)[0]
         
         # 4. Convert Raw AQI to Category String (The ML Label)
         category = get_categorical_aqi(predicted_aqi_val)
 
         # Print to terminal for orchestrator visual
-        print(f"📡 [PING RECEIVED] PM2.5:{pm25} CO:{co} Temp:{temp} Hum:{humidity}")
+        print(f"📡 [PING RECEIVED] PM2.5:{pm25} MQ135:{mq135_aq} CO:{co} Temp:{temp} Hum:{humidity}")
         print(f"🎯 [INFERRED AQI] {predicted_aqi_val:.1f} -> {category}\n")
 
         # 5. Return the string instantly to the ESP32

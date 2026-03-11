@@ -44,9 +44,10 @@ def download_thingspeak_data():
             row = {
                 'Timestamp': f.get('created_at'),
                 'PM25': float(f['field1']) if f.get('field1') else np.nan,
-                'CO': float(f['field2']) if f.get('field2') else np.nan,
-                'Temp': float(f['field3']) if f.get('field3') else np.nan,
-                'Humidity': float(f['field4']) if f.get('field4') else np.nan
+                'MQ135_AQ': float(f['field2']) if f.get('field2') else np.nan,
+                'CO': float(f['field3']) if f.get('field3') else np.nan,
+                'Temp': float(f['field4']) if f.get('field4') else np.nan,
+                'Humidity': float(f['field5']) if f.get('field5') else np.nan
             }
             data.append(row)
         except Exception:
@@ -102,7 +103,7 @@ def train_and_export():
     print(f"💾 Updated local dataset saved to '{CSV_FILENAME}'.")
 
     # 4. Filter and Train
-    X = df_merged[['PM25', 'CO', 'Temp', 'Humidity']]
+    X = df_merged[['PM25', 'MQ135_AQ', 'CO', 'Temp', 'Humidity']]
     y = df_merged['AQI_Target']
 
     # Handle missing values
